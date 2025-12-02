@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Caja - DUXELITOS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #0d47a1; min-height: 100vh; }
+        
+        .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #0F2847 0%, #1565C0 40%, #1976D2 100%); }
+        .login-box { background: white; padding: 50px 40px; border-radius: 15px; box-shadow: 0 10px 50px rgba(0,0,0,0.3); width: 100%; max-width: 500px; text-align: center; }
+        .logo-box { margin-bottom: 30px; }
+        .logo-box img { max-width: 100%; height: auto; max-height: 150px; }
+        .login-box h2 { color: #0d47a1; margin-bottom: 30px; font-size: 24px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .login-box button { width: 100%; padding: 14px; background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .login-box button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(13, 71, 161, 0.4); }
+        
+        .main-app { display: none; min-height: 100vh; background: #0d47a1; }
+        .header { background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); padding: 30px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header-left { display: flex; align-items: center; gap: 20px; color: white; }
+        .header-logo { max-width: 80px; max-height: 70px; }
+        .header-left h1 { font-size: 26px; margin: 0; font-weight: bold; }
+        .header-left p { font-size: 14px; opacity: 0.95; margin-top: 5px; line-height: 1.4; }
+        .header-right { display: flex; gap: 10px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-backup { background: #4CAF50; color: white; }
+        .btn-load { background: #2196F3; color: white; }
+        .btn-logout { background: #f44336; color: white; }
+        .btn:hover { opacity: 0.9; }
+        
+        .tabs { background: white; padding: 20px 40px; display: flex; gap: 30px; border-bottom: 3px solid #0d47a1; }
+        .tab { background: none; border: none; color: #666; cursor: pointer; font-weight: bold; padding: 12px 0; border-bottom: 4px solid transparent; transition: all 0.3s; font-size: 18px; }
+        .tab.active { color: #0d47a1; border-bottom-color: #0d47a1; font-size: 18px; }
+        
+        .content { padding: 30px 40px; max-width: 1400px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .fecha-box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #0d47a1; }
+        .fecha-box label { color: #0d47a1; font-weight: bold; display: block; margin-bottom: 8px; }
+        .fecha-box input { padding: 8px; border: 2px solid #0d47a1; border-radius: 6px; width: 100%; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .card h3 { color: #0d47a1; margin-bottom: 15px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed; }
+        th { background: #f0f0f0; padding: 12px; text-align: left; font-weight: bold; color: #0d47a1; border-bottom: 2px solid #0d47a1; }
+        th:nth-child(1) { width: 45%; }
+        th:nth-child(2) { width: 25%; }
+        th:nth-child(3) { width: 15%; }
+        th:nth-child(4) { width: 10%; }
+        th:nth-child(5) { width: 5%; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; word-break: break-word; }
+        td:nth-child(1) { width: 45%; }
+        td:nth-child(2) { width: 25%; }
+        td:nth-child(3) { width: 15%; }
+        td:nth-child(4) { width: 10%; }
+        td:nth-child(5) { width: 5%; }
+        
+        select, input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; }
+        input[type="date"] { width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 6px; }
+        
+        .tipo-search { width: 100% !important; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .tipo-select { width: 100%; padding: 10px; border: 2px solid #0d47a1; border-radius: 6px; max-height: 150px; overflow-y: auto; position: relative; z-index: 10; }
+        
+        .total-box { color: white; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; margin-top: 15px; font-weight: bold; font-size: 16px; }
+        .total-ingresos { background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%); }
+        .total-egresos { background: linear-gradient(135deg, #f44336 0%, #ef5350 100%); }
+        .total-box.ingresos { background: linear-gradient(135deg, #388e3c 0%, #4caf50 100%); }
+        .total-box.egresos { background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%); }
+        .btn-add { background: #0d47a1; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+        .btn-custom { background: #7cb342; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-remove { background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        
+        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 30px; }
+        .summary-card { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .summary-card .label { color: #999; font-size: 12px; font-weight: bold; }
+        .summary-card .value { color: #0d47a1; font-size: 28px; font-weight: bold; margin-top: 10px; }
+        .summary-card.highlight { background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); }
+        .summary-card.highlight .label { color: rgba(255,255,255,0.8); }
+        .summary-card.highlight .value { color: white; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 10px; max-width: 400px; }
+        .modal-content h3 { color: #0d47a1; margin-bottom: 15px; }
+        .modal-content input { width: 100%; padding: 10px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 6px; }
+        .modal-buttons { display: flex; gap: 10px; }
+        .modal-buttons button { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-confirm { background: #0d47a1; color: white; }
+        .btn-cancel { background: #f0f0f0; color: #333; }
+        
+        .tipo-wrapper { position: relative; }
+        .tipo-search { width: 100% !important; padding: 12px !important; border: 2px solid #0d47a1 !important; border-radius: 6px !important; font-size: 14px !important; background: white !important; color: #333 !important; }
+        .tipo-search::placeholder { color: #999 !important; }
+        .tipo-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #0d47a1; border-top: none; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .tipo-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; transition: all 0.2s; color: #333; }
+        .tipo-item:hover { background: #e3f2fd; color: #0d47a1; font-weight: 500; }
+        .tipo-item-empty { padding: 10px 12px; color: #999; font-style: italic; text-align: center; }
+        
+        @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } .summary { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) { .header { flex-direction: column; gap: 10px; } .tabs { flex-wrap: wrap; } .summary { grid-template-columns: 1fr; } .header-right { width: 100%; } }
+        
+        #reporteContainer table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        #reporteContainer th { background: #0d47a1; color: white; padding: 12px; text-align: left; }
+        #reporteContainer td { padding: 10px 12px; border-bottom: 1px solid #ddd; }
+        #reporteContainer tr:hover { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <div class="logo-box">
+                <img src="https://i.postimg.cc/hG997yWv/preview-(5).jpg" alt="Dulxelitos" style="max-width: 100%; height: auto;">
+            </div>
+            <h2>Sistema de Caja</h2>
+            <input type="text" id="username" placeholder="Usuario" value="">
+            <input type="password" id="password" placeholder="Contraseña" value="">
+            <button id="btnLogin">INGRESAR</button>
+        </div>
+    </div>
+
+    <div class="main-app" id="mainApp">
+        <div class="header">
+            <div class="header-left">
+                <img src="https://i.postimg.cc/hG997yWv/preview-(5).jpg" alt="Dulxelitos" style="max-height: 70px; margin-right: 15px;">
+                <div style="font-size: 12px; color: white;">
+                    <strong>PRODUGAL S.R.L. - DUXELITOS</strong><br>
+                    📍 Av. Pedro Vargas 2400 - San Rafael, Mendoza<br>
+                    📱 2604-599915<br>
+                    📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7d0b1813091c0e3d1908110518111409120e531e1210531c0f">[email&#160;protected]</a><br>
+                    🏢 CUIT: 30-71753073-6
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-backup" id="btnBackup">💾 Backup</button>
+                <button class="btn btn-load" id="btnLoadBackup">📂 Cargar</button>
+                <button class="btn" style="background: #4CAF50; color: white;" onclick="exportarExcelCaja()">📊 Excel</button>
+                <button class="btn btn-logout" id="btnLogout">Cerrar</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="caja">Caja Diaria</button>
+            <button class="tab" data-tab="reportes">Reportes</button>
+        </div>
+
+        <div class="content">
+            <div class="tab-content active" id="tabCaja">
+                <div class="fecha-box">
+                    <label>Fecha de Operación</label>
+                    <input type="date" id="fecha">
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>Ingresos</h3>
+                        <table>
+                            <thead><tr><th>Tipo</th><th>Detalle</th><th>Efectivo</th><th>Transfer</th><th></th></tr></thead>
+                            <tbody id="ingresosBody"></tbody>
+                        </table>
+                        <button class="btn-add" onclick="addIngreso()">+ Ingreso</button>
+                        <button class="btn-custom" onclick="openNewType('ingreso')">➕ Nuevo Tipo</button>
+                        <button class="btn-custom" style="background: #f44336;" onclick="openDeleteType('ingreso')">➖ Eliminar Tipo</button>
+                        <div class="total-box total-ingresos">
+                            <span>Total Ingresos:</span>
+                            <span><span id="totalIngresos">$0</span></span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Egresos</h3>
+                        <table>
+                            <thead><tr><th>Tipo</th><th>Detalle</th><th>Efectivo</th><th>Transfer</th><th></th></tr></thead>
+                            <tbody id="egresosBody"></tbody>
+                        </table>
+                        <button class="btn-add" onclick="addEgreso()">+ Egreso</button>
+                        <button class="btn-custom" onclick="openNewType('egreso')">➕ Nuevo Tipo</button>
+                        <button class="btn-custom" style="background: #f44336;" onclick="openDeleteType('egreso')">➖ Eliminar Tipo</button>
+                        <div class="total-box total-egresos">
+                            <span>Total Egresos:</span>
+                            <span><span id="totalEgresos">$0</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary">
+                    <div class="summary-card">
+                        <div class="label">Total Ingresos</div>
+                        <div class="value"><span id="resumenIngresos">$0</span></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">Total Egresos</div>
+                        <div class="value"><span id="resumenEgresos">$0</span></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">Transferencias</div>
+                        <div class="value"><span id="resumenTransferencias">$0</span></div>
+                    </div>
+                    <div class="summary-card highlight">
+                        <div class="label">Efectivo en Caja</div>
+                        <div class="value"><span id="efectivoFinal">$0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tabReportes">
+                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <label style="display: inline-block; margin-right: 20px;">Desde: <input type="date" id="fechaDesde" style="width: 150px;"></label>
+                    <label style="display: inline-block; margin-right: 20px;">Hasta: <input type="date" id="fechaHasta" style="width: 150px;"></label>
+                    <button class="btn-add" onclick="generarReporte()">Generar Reporte</button>
+                    <button class="btn-custom" style="background: #4CAF50;" onclick="exportarExcelReportes()">📊 Descargar Excel</button>
+                </div>
+                <div id="reporteContainer" style="background: white; padding: 20px; border-radius: 10px;">
+                    <p style="text-align: center; color: #999;">Selecciona fechas y genera un reporte</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="newTypeModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Crear Nuevo Tipo</h3>
+            <input type="text" id="newTypeName" placeholder="Nombre del tipo">
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="crearNuevoTipo()">Crear</button>
+                <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="deleteTypeModal">
+        <div class="modal-content">
+            <h3 id="modalDeleteTitle">Eliminar Tipo</h3>
+            <select id="deleteTypeSelect">
+                <option value="">-- Seleccionar tipo a eliminar --</option>
+            </select>
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="eliminarTipo()" style="background: #f44336;">Eliminar</button>
+                <button class="btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        var tiposIngreso = ["Aporte en Dinero", "Cobranza Valentin", "Factura", "Factura Pago a Cuenta", "Factura Transferencia", "Recupero Cheque", "Remito", "Remito Pago a Cuenta", "Remito Transferencia", "Cobranza Andres", "Exedente de Caja", "Otros Ingresos", "Cobranza Dist. Chinarro", "Recupero de Gasto", "Inicio de Caja"];
+        var tiposEgreso = ["Ajuste de Sueldo Alcala Marcelo", "Ajuste de Sueldo Bayona Walter", "Ajuste de Sueldo Castilla Ezequiel", "Ajuste de Sueldo Castilla Luciano", "Ajuste de Sueldo Cayo Nestor", "Ajuste de Sueldo Gijon Valentin", "Ajuste de Sueldo Huberman Cesar", "Ajuste de Sueldo Lozada David", "Ajuste de Sueldo Lozada Marcela", "Ajuste de Sueldo Martinez Emiliano", "Ajuste de Sueldo Martinez Juan Jose", "Ajuste de Sueldo Palacios Omar", "Ajuste de Sueldo Ratto Andrea", "Ajuste de Sueldo Tapia Alberto", "Ajuste de Sueldo Yañez Emanuel", "Anticipo de Sueldo Alcala Marcelo", "Anticipo de Sueldo Bayona Walter", "Anticipo de Sueldo Castilla Ezequiel", "Anticipo de Sueldo Castilla Luciano", "Anticipo de Sueldo Cayo Nestor", "Anticipo de Sueldo Gijon Valentin", "Anticipo de Sueldo Huberman Cesar", "Anticipo de Sueldo Lozada David", "Anticipo de Sueldo Lozada Marcela", "Anticipo de Sueldo Martinez Emiliano", "Anticipo de Sueldo Martinez Juan Jose", "Anticipo de Sueldo Palacios Omar", "Anticipo de Sueldo Ratto Andrea", "Anticipo de Sueldo Tapia Alberto", "Anticipo de Sueldo Yañez Emanuel", "Atmosferico", "Combustible", "Comisiones", "Contenedrores", "Control de Plagas", "Descarga Palito Maíz", "Descarga Papa Cruda", "Donaciones", "Electricidad", "Ferretería", "Flete Adolfo San Luis", "Flete Amoruso Mario San Luis", "Flete Cano Mario San Luis", "Flete Carallos Rodolfo", "Flete Escudero Benito", "Flete Esteban Emilio Malargue", "Flete Expreso Malargue", "Flete Fernadez Abel Alvear", "Flete Villegas Luis", "Flete Samo Alexis", "Flete Varas Leonardo Malargue", "Gastos Varios", "Honorarios Bromatologa", "Honorarios Contador", "Horas Extras Castilla Ezequiel", "Horas Extras Castilla Luciano", "Horas Extras Cayo Nestor", "Horas Extras Martinez Emiliano", "Horas Extras Palacios Omar", "Horas Extras Tapia Alberto", "Horas Extras Yañez Emanuel", "Impuestos (Gas)", "Insumos Informaticos", "Internet", "Leyes Sociales", "Mandados Varios", "Mantenimiento Informaticos", "Mantenimiento Maquinarias", "Mantenimiento Vehículos", "Mantenimientos Insumos Informaticos", "Multas", "Pago Azúcar", "Pago Papa Cruda", "Pago Tostadas", "Patentes Vehículos", "Plomeria", "Productos para Refrigerio Personal", "Productos de Librería", "Productos de Limpieza", "Publicidad", "Reposición Cheques Rechazados", "Retiro Basura", "Retiro Socio Chinarro Roberto", "Retiro Socio Gijon Gustavo", "Repuesto Maquinaria", "Seguros", "Sistema de alarma", "Soporte Sistema Discovery", "Sueldo Cabaña Luciano", "Sueldo Chinarro Eliana", "Sueldo Gijon Andres", "Sueldo Gijon Eugenio", "Sueldo Gijon Francisco", "Sueldo Herrera Daniel", "Horas Extras Alcala Marcelo", "Agua Personal", "Agua Esencia de Vainilla", "Bienes de Uso para Depósito", "Anticipo de Sueldo Cabaña Luciano", "Bascula (Pesada Papa)", "Bascula (Pesada Aceite)", "Cajas Usadas", "Gastos Coronel Suarez", "Materiales Varios", "Cinta de Embalar", "Horas Extras Lozada David", "Flete Maravilla", "Mantenimiento Deposito", "Instalaciones Tecnicas", "Insumos para el Personal", "Mantenimientos Varios", "Flete Cacho", "Pago Alquiler", "Flete Expreso Gonzalez", "Sueldo Castellano Alejo", "Anticipo de Sueldo Castellano Alejo", "Impuestos Municipal", "Prestamos", "Transferencia entre Cajas", "Servicio de Autoelevador", "Ropa de Trabajo", "Soda Cáustica", "Faltante de Caja", "Muebles y Utiles", "Impuestos Varios", "Flete Amilcar", "Flete Vasca", "Imprenta", "Flete Maldonado", "Materia Prima", "Honorarios Seg. E Higiene", "Anticipo de Sueldo Tilleria Cristian", "Ajuste de Sueldo Tilleria Cristian", "Anticipo de Sueldo Arrieta Emanuel", "Ajuste de Sueldo Arrieta Emanuel", "Sueldo Gijon Ramiro", "Flete - Traslado Autoelevador", "Pallet usados", "Horas Extras Arrieta Emmanuel", "Horas Extras Tilleria Cristian", "Ajuste de Sueldo Rivero Lucas", "Anticipo de Sueldo Rivero Lucas", "Ajuste de Sueldo Solarza Facundo", "Anticipo de Sueldo Solarza Facundo", "Ajuste de Sueldo Arrienta Elian", "Anticipo de Sueldo Arrienta Elian", "Compra de Dólares", "STRECH", "Sueldo Rivero Lucas", "Sueldo Bastias Nicolas", "Pago Aguila & Aguila", "Salida a Banco", "Ajuste de Sueldo Bastias Nicolas", "Anticipo de Sueldo Bastias Nicolas", "Recambio Matafuego", "Metalúrgica Foksek Carlos", "Flete Fernandez Ricardo", "Flete Papa (Varios)", "Mantenimiento de Efluentes", "Pago Trival Snack S.R.L."];
+        var registrosDiarios = {};
+        var currentTypeMode = '';
+
+        function formatCurrency(num) {
+            var n = parseFloat(num || 0);
+            var parts = Math.round(n).toString().split('');
+            var resultado = '';
+            var contador = 0;
+            for (var i = parts.length - 1; i >= 0; i--) {
+                if (contador > 0 && contador % 3 === 0) {
+                    resultado = '.' + resultado;
+                }
+                resultado = parts[i] + resultado;
+                contador++;
+            }
+            return '$' + resultado;
+        }
+
+        function parseCurrency(str) {
+            return parseInt((str || '0').replace(/\$/g, '').replace(/\./g, '')) || 0;
+        }
+
+        function addIngreso() {
+            var html = '<tr><td><div class="tipo-wrapper"><input type="text" class="tipo-search" placeholder="🔍 Buscar tipo..." autocomplete="off"><div class="tipo-dropdown" style="display:none;"></div></div></td>';
+            html += '<td><input type="text" class="det" placeholder="Detalle"></td>';
+            html += '<td><input type="text" class="efe" value="$0" inputmode="numeric"></td>';
+            html += '<td><input type="text" class="tra" value="$0" inputmode="numeric"></td>';
+            html += '<td><button class="btn-remove" onclick="this.parentNode.parentNode.remove(); calcularTotales();">X</button></td></tr>';
+            
+            var row = document.createElement('tr');
+            row.innerHTML = html;
+            document.getElementById('ingresosBody').appendChild(row);
+            
+            var input = row.querySelector('.tipo-search');
+            var dropdown = row.querySelector('.tipo-dropdown');
+            
+            input.addEventListener('focus', () => { actualizarDropdown(input, dropdown, 'ingreso'); });
+            input.addEventListener('input', () => { actualizarDropdown(input, dropdown, 'ingreso'); });
+            input.addEventListener('blur', () => { setTimeout(() => { dropdown.style.display = 'none'; }, 150); });
+            
+            row.querySelector('.efe').addEventListener('input', e => {
+                var valor = e.target.value.replace(/[^\d]/g, '');
+                e.target.value = formatCurrency(valor);
+                calcularTotales();
+            });
+            row.querySelector('.tra').addEventListener('input', e => {
+                var valor = e.target.value.replace(/[^\d]/g, '');
+                e.target.value = formatCurrency(valor);
+                calcularTotales();
+            });
+        }
+
+        function addEgreso() {
+            var html = '<tr><td><div class="tipo-wrapper"><input type="text" class="tipo-search" placeholder="🔍 Buscar tipo..." autocomplete="off"><div class="tipo-dropdown" style="display:none;"></div></div></td>';
+            html += '<td><input type="text" class="det" placeholder="Detalle"></td>';
+            html += '<td><input type="text" class="efe" value="$0" inputmode="numeric"></td>';
+            html += '<td><input type="text" class="tra" value="$0" inputmode="numeric"></td>';
+            html += '<td><button class="btn-remove" onclick="this.parentNode.parentNode.remove(); calcularTotales();">X</button></td></tr>';
+            
+            var row = document.createElement('tr');
+            row.innerHTML = html;
+            document.getElementById('egresosBody').appendChild(row);
+            
+            var input = row.querySelector('.tipo-search');
+            var dropdown = row.querySelector('.tipo-dropdown');
+            
+            input.addEventListener('focus', () => { actualizarDropdown(input, dropdown, 'egreso'); });
+            input.addEventListener('input', () => { actualizarDropdown(input, dropdown, 'egreso'); });
+            input.addEventListener('blur', () => { setTimeout(() => { dropdown.style.display = 'none'; }, 150); });
+            
+            row.querySelector('.efe').addEventListener('input', e => {
+                var valor = e.target.value.replace(/[^\d]/g, '');
+                e.target.value = formatCurrency(valor);
+                calcularTotales();
+            });
+            row.querySelector('.tra').addEventListener('input', e => {
+                var valor = e.target.value.replace(/[^\d]/g, '');
+                e.target.value = formatCurrency(valor);
+                calcularTotales();
+            });
+        }
+
+        function actualizarDropdown(input, dropdown, tipo) {
+            var filter = input.value.toLowerCase();
+            var tipos = (tipo === 'ingreso') ? tiposIngreso : tiposEgreso;
+            var matches = tipos.filter(t => t.toLowerCase().includes(filter));
+            
+            dropdown.innerHTML = '';
+            if (matches.length > 0) {
+                matches.forEach(match => {
+                    var item = document.createElement('div');
+                    item.className = 'tipo-item';
+                    item.textContent = match;
+                    item.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        input.value = match;
+                        dropdown.style.display = 'none';
+                    });
+                    dropdown.appendChild(item);
+                });
+                dropdown.style.display = 'block';
+            } else if (filter) {
+                var item = document.createElement('div');
+                item.className = 'tipo-item-empty';
+                item.textContent = 'No encontrado';
+                dropdown.appendChild(item);
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function calcularTotales() {
+            var totalIng = 0, totalTrans = 0;
+            document.querySelectorAll('#ingresosBody tr').forEach(row => {
+                totalIng += parseCurrency(row.querySelector('.efe').value) + parseCurrency(row.querySelector('.tra').value);
+                totalTrans += parseCurrency(row.querySelector('.tra').value);
+            });
+            var totalEgr = 0;
+            document.querySelectorAll('#egresosBody tr').forEach(row => {
+                totalEgr += parseCurrency(row.querySelector('.efe').value) + parseCurrency(row.querySelector('.tra').value);
+            });
+            var efectivo = totalIng - totalEgr - totalTrans;
+            document.getElementById('totalIngresos').textContent = formatCurrency(totalIng);
+            document.getElementById('totalEgresos').textContent = formatCurrency(totalEgr);
+            document.getElementById('resumenIngresos').textContent = formatCurrency(totalIng);
+            document.getElementById('resumenEgresos').textContent = formatCurrency(totalEgr);
+            document.getElementById('resumenTransferencias').textContent = formatCurrency(totalTrans);
+            document.getElementById('efectivoFinal').textContent = formatCurrency(efectivo);
+            registrosDiarios[document.getElementById('fecha').value] = {ing: totalIng, egr: totalEgr, trans: totalTrans, efe: efectivo};
+        }
+
+        function openNewType(tipo) {
+            currentTypeMode = tipo;
+            document.getElementById('modalTitle').textContent = tipo === 'ingreso' ? 'Nuevo Ingreso' : 'Nuevo Egreso';
+            document.getElementById('newTypeName').value = '';
+            document.getElementById('newTypeModal').classList.add('active');
+            document.getElementById('newTypeName').focus();
+        }
+
+        function crearNuevoTipo() {
+            var nombre = document.getElementById('newTypeName').value.trim();
+            if (!nombre) { alert('Ingresa un nombre'); return; }
+            if (currentTypeMode === 'ingreso') {
+                if (!tiposIngreso.includes(nombre)) { tiposIngreso.push(nombre); alert('✓ Agregado'); } else { alert('Ya existe'); return; }
+            } else {
+                if (!tiposEgreso.includes(nombre)) { tiposEgreso.push(nombre); alert('✓ Agregado'); } else { alert('Ya existe'); return; }
+            }
+            closeModal();
+        }
+
+        function openDeleteType(tipo) {
+            currentTypeMode = tipo;
+            var select = document.getElementById('deleteTypeSelect');
+            select.innerHTML = '<option value="">-- Seleccionar tipo a eliminar --</option>';
+            var tipos = (tipo === 'ingreso') ? tiposIngreso : tiposEgreso;
+            tipos.forEach(t => {
+                var opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                select.appendChild(opt);
+            });
+            document.getElementById('modalDeleteTitle').textContent = tipo === 'ingreso' ? 'Eliminar Ingreso' : 'Eliminar Egreso';
+            document.getElementById('deleteTypeModal').classList.add('active');
+        }
+
+        function eliminarTipo() {
+            var select = document.getElementById('deleteTypeSelect');
+            var nombre = select.value.trim();
+            if (!nombre) { alert('Selecciona un tipo'); return; }
+            if (currentTypeMode === 'ingreso') {
+                var idx = tiposIngreso.indexOf(nombre);
+                if (idx > -1) { tiposIngreso.splice(idx, 1); alert('✓ Eliminado'); } else { alert('No encontrado'); return; }
+            } else {
+                var idx = tiposEgreso.indexOf(nombre);
+                if (idx > -1) { tiposEgreso.splice(idx, 1); alert('✓ Eliminado'); } else { alert('No encontrado'); return; }
+            }
+            closeDeleteModal();
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteTypeModal').classList.remove('active');
+        }
+
+        function exportarExcelCaja() {
+            var fecha = document.getElementById('fecha').value;
+            var ingresos = [];
+            var egresos = [];
+            var totalIng = 0, totalEgr = 0, totalTrans = 0;
+            
+            // Recopilar ingresos
+            document.querySelectorAll('#ingresosBody tr').forEach(row => {
+                var tipo = row.querySelector('.tipo-search').value;
+                var detalle = row.querySelector('.det').value;
+                var efectivo = parseCurrency(row.querySelector('.efe').value);
+                var transfer = parseCurrency(row.querySelector('.tra').value);
+                if (tipo || detalle || efectivo > 0 || transfer > 0) {
+                    ingresos.push({tipo, detalle, efectivo, transfer});
+                    totalIng += efectivo;
+                    totalTrans += transfer;
+                }
+            });
+            
+            // Recopilar egresos
+            document.querySelectorAll('#egresosBody tr').forEach(row => {
+                var tipo = row.querySelector('.tipo-search').value;
+                var detalle = row.querySelector('.det').value;
+                var efectivo = parseCurrency(row.querySelector('.efe').value);
+                var transfer = parseCurrency(row.querySelector('.tra').value);
+                if (tipo || detalle || efectivo > 0 || transfer > 0) {
+                    egresos.push({tipo, detalle, efectivo, transfer});
+                    totalEgr += efectivo;
+                    totalTrans += transfer;
+                }
+            });
+            
+            // Crear HTML para Excel con diseño profesional
+            var html = '<html><head><meta charset="UTF-8"></head><body>';
+            html += '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; font-family: Arial; width: 100%;">';
+            
+            // HEADER
+            html += '<tr>';
+            html += '<td colspan="4" style="background-color: #ADD8E6; text-align: center; font-weight: bold; font-size: 14px; padding: 10px;">CAJA DIARIA - PRODUGAL DUXELITOS</td>';
+            html += '</tr>';
+            html += '<tr>';
+            html += '<td colspan="4" style="background-color: #ADD8E6; padding: 5px;">Fecha: ' + fecha + '</td>';
+            html += '</tr>';
+            html += '<tr>';
+            html += '<td colspan="4" style="background-color: #ADD8E6; height: 5px;"></td>';
+            html += '</tr>';
+            
+            // INGRESOS HEADER
+            html += '<tr>';
+            html += '<td colspan="4" style="background-color: #90EE90; font-weight: bold; color: #333;">INGRESOS</td>';
+            html += '</tr>';
+            html += '<tr>';
+            html += '<td style="background-color: #90EE90; font-weight: bold;">Tipo</td>';
+            html += '<td style="background-color: #90EE90; font-weight: bold;">Detalle</td>';
+            html += '<td style="background-color: #90EE90; font-weight: bold; text-align: center;">Monto Efectivo</td>';
+            html += '<td style="background-color: #90EE90; font-weight: bold; text-align: center;">Monto Transferencia</td>';
+            html += '</tr>';
+            
+            // INGRESOS FILAS
+            ingresos.forEach(ing => {
+                html += '<tr>';
+                html += '<td style="width: 25%;">' + ing.tipo + '</td>';
+                html += '<td style="width: 25%;">' + ing.detalle + '</td>';
+                html += '<td style="width: 25%; text-align: right;">$ ' + ing.efectivo.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '</td>';
+                html += '<td style="width: 25%; text-align: right;">' + (ing.transfer > 0 ? '$ ' + ing.transfer.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : '') + '</td>';
+                html += '</tr>';
+            });
+            
+            // TOTAL INGRESOS
+            html += '<tr>';
+            html += '<td colspan="2" style="background-color: #90EE90; font-weight: bold;">TOTAL INGRESOS</td>';
+            html += '<td style="background-color: #90EE90; font-weight: bold; text-align: right;">$ ' + totalIng.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '</td>';
+            html += '<td style="background-color: #90EE90;"></td>';
+            html += '</tr>';
+            
+            // ESPACIO
+            html += '<tr><td colspan="4" style="height: 5px;"></td></tr>';
+            
+            // EGRESOS HEADER
+            html += '<tr>';
+            html += '<td colspan="4" style="background-color: #FFB6C1; font-weight: bold; color: #333;">EGRESOS</td>';
+            html += '</tr>';
+            html += '<tr>';
+            html += '<td style="background-color: #FFB6C1; font-weight: bold;">Tipo</td>';
+            html += '<td style="background-color: #FFB6C1; font-weight: bold;">Detalle</td>';
+            html += '<td style="background-color: #FFB6C1; font-weight: bold; text-align: center;">Monto Efectivo</td>';
+            html += '<td style="background-color: #FFB6C1; font-weight: bold; text-align: center;">Monto Transferencia</td>';
+            html += '</tr>';
+            
+            // EGRESOS FILAS
+            egresos.forEach(egr => {
+                html += '<tr>';
+                html += '<td style="width: 25%;">' + egr.tipo + '</td>';
+                html += '<td style="width: 25%;">' + egr.detalle + '</td>';
+                html += '<td style="width: 25%; text-align: right;">$ ' + egr.efectivo.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '</td>';
+                html += '<td style="width: 25%; text-align: right;">' + (egr.transfer > 0 ? '$ ' + egr.transfer.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : '') + '</td>';
+                html += '</tr>';
+            });
+            
+            // TOTAL EGRESOS
+            html += '<tr>';
+            html += '<td colspan="2" style="background-color: #FFB6C1; font-weight: bold;">TOTAL EGRESOS</td>';
+            html += '<td style="background-color: #FFB6C1; font-weight: bold; text-align: right;">$ ' + totalEgr.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '</td>';
+            html += '<td style="background-color: #FFB6C1;"></td>';
+            html += '</tr>';
+            
+            // ESPACIO
+            html += '<tr><td colspan="4" style="height: 5px;"></td></tr>';
+            
+            // TRANSFERENCIAS
+            html += '<tr>';
+            html += '<td colspan="2" style="background-color: #ADD8E6; font-weight: bold;">TRANSFERENCIAS</td>';
+            html += '<td colspan="2" style="background-color: #ADD8E6; text-align: right; font-weight: bold;">$ ' + totalTrans.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '</td>';
+            html += '</tr>';
+            
+            // EFECTIVO EN CAJA
+            html += '<tr>';
+            html += '<td colspan="2" style="background-color: #ADD8E6; font-weight: bold;">EFECTIVO EN CAJA</td>';
+            html += '<td colspan="2" style="background-color: #ADD8E6; text-align: right; font-weight: bold;">$ ' + (totalIng - totalEgr).toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '</td>';
+            html += '</tr>';
+            
+            html += '</table>';
+            html += '</body></html>';
+            
+            // Descargar como Excel
+            var link = document.createElement('a');
+            link.href = 'data:application/vnd.ms-excel;charset=UTF-8,' + encodeURIComponent(html);
+            link.download = 'caja_diaria_' + fecha + '.xls';
+            link.click();
+        }
+
+        function exportarExcelReportes() {
+            var desde = document.getElementById('fechaDesde').value;
+            var hasta = document.getElementById('fechaHasta').value;
+            
+            var tIng = 0, tEgr = 0, tTrans = 0;
+            for (var f in registrosDiarios) {
+                if (f >= desde && f <= hasta) {
+                    var r = registrosDiarios[f];
+                    tIng += r.ing;
+                    tEgr += r.egr;
+                    tTrans += r.trans;
+                }
+            }
+            
+            // Crear HTML para Excel (compatible)
+            var html = '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; font-family: Arial; width: 100%;">';
+            html += '<tr style="background-color: #87CEEB;"><td colspan="2" style="background-color: #87CEEB; text-align: center; font-size: 16px; font-weight: bold; color: white;">REPORTE DE CAJA - PRODUGAL DUXELITOS</td></tr>';
+            html += '<tr style="background-color: #87CEEB;"><td colspan="2" style="background-color: #87CEEB; color: white;">Período: ' + desde + ' al ' + hasta + '</td></tr>';
+            html += '<tr style="background-color: #87CEEB;"><td colspan="2" style="background-color: #87CEEB;"></td></tr>';
+            
+            html += '<tr style="background-color: #87CEEB;"><td style="background-color: #87CEEB; color: white; font-weight: bold;">CONCEPTO</td><td style="background-color: #87CEEB; color: white; font-weight: bold; text-align: right;">MONTO</td></tr>';
+            
+            html += '<tr style="background-color: #4CAF50;"><td style="background-color: #4CAF50; color: white; font-weight: bold;">Total Ingresos</td><td style="background-color: #4CAF50; color: white; font-weight: bold; text-align: right;">$' + formatCurrency(tIng).replace('$', '') + '</td></tr>';
+            
+            html += '<tr style="background-color: #f44336;"><td style="background-color: #f44336; color: white; font-weight: bold;">Total Egresos</td><td style="background-color: #f44336; color: white; font-weight: bold; text-align: right;">$' + formatCurrency(tEgr).replace('$', '') + '</td></tr>';
+            
+            html += '<tr style="background-color: #FF9800;"><td style="background-color: #FF9800; color: white; font-weight: bold;">Transferencias</td><td style="background-color: #FF9800; color: white; font-weight: bold; text-align: right;">$' + formatCurrency(tTrans).replace('$', '') + '</td></tr>';
+            
+            html += '<tr style="background-color: #87CEEB;"><td style="background-color: #87CEEB; color: white; font-weight: bold;">EFECTIVO EN CAJA</td><td style="background-color: #87CEEB; color: white; font-weight: bold; text-align: right;">$' + formatCurrency(tIng - tEgr - tTrans).replace('$', '') + '</td></tr>';
+            
+            html += '</table>';
+            
+            var link = document.createElement('a');
+            link.href = 'data:application/vnd.ms-excel,' + encodeURIComponent(html);
+            link.download = 'reporte_' + desde + '_' + hasta + '.xls';
+            link.click();
+        }
+
+        function closeModal() {
+            document.getElementById('newTypeModal').classList.remove('active');
+        }
+
+        function generarReporte() {
+            var desde = document.getElementById('fechaDesde').value;
+            var hasta = document.getElementById('fechaHasta').value;
+            if (!desde || !hasta) { alert('Selecciona fechas'); return; }
+            
+            var html = '<h3>INGRESOS: ' + desde + ' al ' + hasta + '</h3>';
+            html += '<table><thead><tr><th>Fecha</th><th>Ingresos</th></tr></thead><tbody>';
+            var tIng = 0;
+            var hay = false;
+            
+            for (var f in registrosDiarios) {
+                if (f >= desde && f <= hasta) {
+                    hay = true;
+                    var r = registrosDiarios[f];
+                    html += '<tr><td>' + f + '</td><td>' + formatCurrency(r.ing) + '</td></tr>';
+                    tIng += r.ing;
+                }
+            }
+            if (hay) html += '<tr style="background: #f0f0f0; font-weight: bold;"><td>TOTAL INGRESOS</td><td>' + formatCurrency(tIng) + '</td></tr>';
+            html += '</tbody></table>';
+            
+            html += '<br><br><h3>EGRESOS: ' + desde + ' al ' + hasta + '</h3>';
+            html += '<table><thead><tr><th>Fecha</th><th>Egresos</th></tr></thead><tbody>';
+            var tEgr = 0;
+            
+            for (var f in registrosDiarios) {
+                if (f >= desde && f <= hasta) {
+                    var r = registrosDiarios[f];
+                    html += '<tr><td>' + f + '</td><td>' + formatCurrency(r.egr) + '</td></tr>';
+                    tEgr += r.egr;
+                }
+            }
+            if (hay) html += '<tr style="background: #f0f0f0; font-weight: bold;"><td>TOTAL EGRESOS</td><td>' + formatCurrency(tEgr) + '</td></tr>';
+            html += '</tbody></table>';
+            
+            html += '<br><br><h3>RESUMEN FINAL</h3>';
+            html += '<table><thead><tr><th>Concepto</th><th>Monto</th></tr></thead><tbody>';
+            html += '<tr><td>Total Ingresos</td><td>' + formatCurrency(tIng) + '</td></tr>';
+            html += '<tr><td>Total Egresos</td><td>' + formatCurrency(tEgr) + '</td></tr>';
+            html += '<tr style="background: #0d47a1; color: white; font-weight: bold;"><td>EFECTIVO EN CAJA</td><td>' + formatCurrency(tIng - tEgr) + '</td></tr>';
+            html += '</tbody></table>';
+            
+            if (!hay) document.getElementById('reporteContainer').innerHTML = '<p>No hay datos</p>';
+            else document.getElementById('reporteContainer').innerHTML = html;
+        }
+
+        document.getElementById('btnLogin').addEventListener('click', () => {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaDesde').value = document.getElementById('fecha').value;
+            document.getElementById('fechaHasta').value = document.getElementById('fecha').value;
+            addIngreso();
+            addEgreso();
+        });
+
+        document.getElementById('btnLogout').addEventListener('click', () => {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                var id = 'tab' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1);
+                document.getElementById(id).classList.add('active');
+            });
+        });
+
+        document.getElementById('btnBackup').addEventListener('click', () => {
+            var datos = JSON.stringify({registros: registrosDiarios, fecha: new Date().toISOString()}, null, 2);
+            var link = document.createElement('a');
+            link.href = 'data:text/json,' + encodeURIComponent(datos);
+            link.download = 'backup_caja_' + new Date().getTime() + '.json';
+            link.click();
+        });
+
+        document.getElementById('btnLoadBackup').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            var reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    var datos = JSON.parse(event.target.result);
+                    registrosDiarios = datos.registros || {};
+                    alert('✓ Backup cargado correctamente');
+                } catch (err) {
+                    alert('Error al cargar el archivo');
+                }
+            };
+            reader.readAsText(e.target.files[0]);
+        });
+    </script>
+</body>
+</html>
